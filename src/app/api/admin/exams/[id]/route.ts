@@ -42,13 +42,14 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, description, difficulty, durationMinutes, isPublished, questions } = body;
+    const { title, description, year, difficulty, durationMinutes, isPublished, questions } = body;
 
     const exam = await prisma.exam.update({
       where: { id: params.id },
       data: {
         title,
         description: description || "",
+        year: Number(year) || 2025,
         difficulty: difficulty || "CHUAN_BO",
         durationMinutes: Number(durationMinutes) || 50,
         isPublished: isPublished ?? true,

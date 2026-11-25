@@ -9,7 +9,7 @@ export default async function ExamsPage() {
 
   const exams = await prisma.exam.findMany({
     where: { isPublished: true },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ year: "desc" }, { createdAt: "desc" }],
     include: {
       _count: {
         select: { questions: true, attempts: true },
@@ -62,6 +62,7 @@ export default async function ExamsPage() {
       id: exam.id,
       title: exam.title,
       description: exam.description,
+      year: exam.year,
       difficulty: exam.difficulty,
       durationMinutes: exam.durationMinutes,
       activeQuestionCount: activeQuestionCount || exam._count.questions,

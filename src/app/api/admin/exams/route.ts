@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, description, difficulty, durationMinutes, isPublished, questions } = body;
+    const { title, description, year, difficulty, durationMinutes, isPublished, questions } = body;
 
     if (!title) {
       return NextResponse.json({ error: "Tiêu đề đề thi không được để trống." }, { status: 400 });
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
       data: {
         title,
         description: description || "",
+        year: Number(year) || new Date().getFullYear(),
         difficulty: difficulty || "CHUAN_BO",
         durationMinutes: Number(durationMinutes) || 50,
         isPublished: isPublished ?? true,

@@ -23,6 +23,7 @@ export interface EditorExam {
   id?: string;
   title: string;
   description: string;
+  year?: number;
   difficulty: string;
   durationMinutes: number;
   isPublished: boolean;
@@ -50,6 +51,7 @@ export default function ExamEditorForm({
 
   const [title, setTitle] = useState(initialExam?.title || "");
   const [description, setDescription] = useState(initialExam?.description || "");
+  const [year, setYear] = useState(initialExam?.year || 2025);
   const [difficulty, setDifficulty] = useState(initialExam?.difficulty || "CHUAN_BO");
   const [durationMinutes, setDurationMinutes] = useState(initialExam?.durationMinutes || 50);
   const [isPublished, setIsPublished] = useState(initialExam?.isPublished ?? true);
@@ -242,6 +244,7 @@ export default function ExamEditorForm({
         body: JSON.stringify({
           title,
           description,
+          year,
           difficulty,
           durationMinutes,
           isPublished,
@@ -313,7 +316,21 @@ export default function ExamEditorForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
+                Năm đề thi
+              </label>
+              <input
+                type="number"
+                min={2020}
+                max={2035}
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
                 Mức độ đề thi

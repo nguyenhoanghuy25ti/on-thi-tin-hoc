@@ -16,6 +16,7 @@ import {
   Search,
   CheckCircle2,
   Filter,
+  Calendar,
 } from "lucide-react";
 import { Orientation } from "@/lib/types";
 
@@ -23,6 +24,7 @@ interface ExamItem {
   id: string;
   title: string;
   description: string;
+  year: number;
   difficulty: string;
   durationMinutes: number;
   activeQuestionCount: number;
@@ -60,8 +62,16 @@ export default function ExamListClient({ exams }: { exams: ExamItem[] }) {
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
+  const [yearFilter, setYearFilter] = useState<string>("ALL");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "DONE" | "TODO">("ALL");
+
+  const availableYears = useMemo(() => {
+    const years = Array.from(new Set(exams.map((exam) => exam.year))).filter(
+      (y) => typeof y === "number" && !Number.isNaN(y)
+    );
+    return years.sort((a, b) => b - a);
+  }, [exams]);
 
   const filteredExams = useMemo(() => {
     return exams.filter((exam) => {
@@ -72,6 +82,9 @@ export default function ExamListClient({ exams }: { exams: ExamItem[] }) {
       ) {
         return false;
       }
+      if (yearFilter !== "ALL" && String(exam.year) !== yearFilter) {
+        return false;
+      }
       if (difficultyFilter !== "ALL" && exam.difficulty !== difficultyFilter) {
         return false;
       }
@@ -79,7 +92,7 @@ export default function ExamListClient({ exams }: { exams: ExamItem[] }) {
       if (statusFilter === "TODO" && exam.userStatus) return false;
       return true;
     });
-  }, [exams, searchQuery, difficultyFilter, statusFilter]);
+  }, [exams, searchQuery, yearFilter, difficultyFilter, statusFilter]);
 
   const handleOpenModal = (exam: ExamItem) => {
     setSelectedExam(exam);
@@ -112,6 +125,21 @@ export default function ExamListClient({ exams }: { exams: ExamItem[] }) {
             Lọc:
           </div>
           <select
+            aria-label="Lọc đề thi theo năm"
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="ALL">Tất cả các năm</option>
+            {availableYears.map((y) => (
+              <option key={y} value={String(y)}>
+                Năm {y}
+              </option>
+            ))}
+          </select>
+
+          <select
+            aria-label="Lọc đề thi theo mức độ"
             value={difficultyFilter}
             onChange={(e) => setDifficultyFilter(e.target.value)}
             className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -123,6 +151,7 @@ export default function ExamListClient({ exams }: { exams: ExamItem[] }) {
           </select>
 
           <select
+            aria-label="Lọc đề thi theo trạng thái"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -135,8 +164,22 @@ export default function ExamListClient({ exams }: { exams: ExamItem[] }) {
       </div>
 
       {filteredExams.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center text-sm text-slate-500 dark:text-slate-400">
-          Không tìm thấy đề thi nào phù hợp với bộ lọc hiện tại.
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-3 text-sm text-slate-500 dark:text-slate-400">
+          <p>Không tìm thấy đề thi nào phù hợp với bộ lọc hiện tại.</p>
+          {(searchQuery || yearFilter !== "ALL" || difficultyFilter !== "ALL" || statusFilter !== "ALL") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setYearFilter("ALL");
+                setDifficultyFilter("ALL");
+                setStatusFilter("ALL");
+              }}
+              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Xóa bộ lọc
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -149,7 +192,11 @@ export default function ExamListClient({ exams }: { exams: ExamItem[] }) {
               >
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                        <Calendar className="w-3.5 h-3.5" />
+                        Năm {exam.year}
+                      </span>
                       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${diffBadge.color}`}>
                         <ShieldCheck className="w-3.5 h-3.5" />
                         {diffBadge.label}

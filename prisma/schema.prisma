@@ -47,6 +47,7 @@ model Exam {
   id              String        @id @default(uuid())
   title           String
   description     String
+  year            Int           @default(2025)
   difficulty      String        @default("CHUAN_BO") // CO_BAN | CHUAN_BO | NANG_CAO
   durationMinutes Int           @default(50)
   isPublished     Boolean       @default(true)

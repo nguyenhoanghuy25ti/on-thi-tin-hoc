@@ -466,6 +466,7 @@ def binary_search(arr, target):
     data: {
       title: "Đề minh họa Tốt nghiệp THPT 2025 - Môn Tin học (GDPT 2018)",
       description: "Đề thi chuẩn cấu trúc Bộ GD&ĐT gồm 28 câu (24 câu Phần I trắc nghiệm 4 lựa chọn, 4 câu Phần II trắc nghiệm Đúng/Sai với nhánh chung và 2 nhánh tự chọn CS / ICT). Thời gian làm bài: 50 phút.",
+      year: 2025,
       difficulty: "CHUAN_BO",
       durationMinutes: 50,
       isPublished: true,
@@ -1108,11 +1109,12 @@ ORDER BY TongSoLuong DESC;`,
 
   console.log("Created Mock Exam 1 with 24 Part I questions and 6 Part II questions (Common, CS, ICT).");
 
-  // 5. Create Practice Exam 2 (Cơ bản - Ôn tập nhanh 15 phút)
+  // 5. Create Practice Exam 2 (Cơ bản - Ôn tập nhanh 15 phút - Năm 2024)
   const exam2 = await prisma.exam.create({
     data: {
-      title: "Đề luyện tập tổng hợp Cơ bản - HTML, SQL & Python (15 phút)",
+      title: "Đề luyện tập tổng hợp Cơ bản 2024 - HTML, SQL & Python (15 phút)",
       description: "Đề luyện nhanh giúp củng cố kiến thức nền tảng về Web HTML5/CSS3, truy vấn SQL và lập trình Python cơ bản.",
+      year: 2024,
       difficulty: "CO_BAN",
       durationMinutes: 15,
       isPublished: true,
@@ -1185,6 +1187,144 @@ ORDER BY TongSoLuong DESC;`,
     await prisma.question.create({
       data: {
         examId: exam2.id,
+        ...q,
+      },
+    });
+  }
+
+  // 5b. Create Sample Exam 3 (Năm 2026 - Nâng cao)
+  const exam3 = await prisma.exam.create({
+    data: {
+      title: "Đề thi thử Tốt nghiệp THPT 2026 - Môn Tin học (Nâng cao)",
+      description: "Đề luyện tập định hướng năm 2026 gồm các câu hỏi tổng hợp về AI tạo sinh, TCP/IP, bảo mật mạng, thuật toán Python (CS) và SQL (ICT).",
+      year: 2026,
+      difficulty: "NANG_CAO",
+      durationMinutes: 50,
+      isPublished: true,
+    },
+  });
+
+  const exam3Questions = [
+    {
+      part: 1,
+      sectionType: "COMMON",
+      topicTag: "AI & Máy tính",
+      orderIndex: 1,
+      contentMarkdown: "Trong Học máy (Machine Learning), phương pháp huấn luyện mô hình dựa trên tập dữ liệu **đã được gán nhãn sẵn** gọi là gì?",
+      optionsJson: JSON.stringify([
+        { id: "A", text: "Học không giám sát (Unsupervised Learning)" },
+        { id: "B", text: "Học có giám sát (Supervised Learning)" },
+        { id: "C", text: "Học ngẫu nhiên (Random Learning)" },
+        { id: "D", text: "Lập trình tuyến tính" },
+      ]),
+      correctOption: "B",
+      explanation: "Học có giám sát (Supervised Learning) sử dụng các cặp dữ liệu đầu vào kèm nhãn đầu ra để mô hình học quy luật dự đoán.",
+    },
+    {
+      part: 1,
+      sectionType: "COMMON",
+      topicTag: "Mạng & An toàn",
+      orderIndex: 2,
+      contentMarkdown: "Trong mô hình TCP/IP, giao thức **HTTPS** mặc định hoạt động tại cổng (port) nào?",
+      optionsJson: JSON.stringify([
+        { id: "A", text: "Cổng 21" },
+        { id: "B", text: "Cổng 80" },
+        { id: "C", text: "Cổng 443" },
+        { id: "D", text: "Cổng 3306" },
+      ]),
+      correctOption: "C",
+      explanation: "HTTP sử dụng cổng 80, còn HTTPS (HTTP bảo mật qua SSL/TLS) sử dụng cổng 443.",
+    },
+    {
+      part: 1,
+      sectionType: "COMMON",
+      topicTag: "Đạo đức & Pháp luật",
+      orderIndex: 3,
+      contentMarkdown: "Khi tạo chữ kí số (Digital Signature) cho văn bản điện tử, người gửi sử dụng khóa nào để kí?",
+      optionsJson: JSON.stringify([
+        { id: "A", text: "Khóa bí mật (Private Key) của người gửi" },
+        { id: "B", text: "Khóa công khai (Public Key) của người nhận" },
+        { id: "C", text: "Mật khẩu đăng nhập Wi-Fi" },
+        { id: "D", text: "Địa chỉ MAC của máy tính" },
+      ]),
+      correctOption: "A",
+      explanation: "Người gửi dùng Khóa bí mật (Private Key) của chính mình để kí; người nhận dùng Khóa công khai (Public Key) của người gửi để xác minh.",
+    },
+    {
+      part: 1,
+      sectionType: "COMMON",
+      topicTag: "HTML & CSS",
+      orderIndex: 4,
+      contentMarkdown: "Trong CSS Box Model, thuộc tính nào tạo khoảng cách **bên ngoài** đường viền (`border`) giữa phần tử hiện tại và các phần tử xung quanh?",
+      optionsJson: JSON.stringify([
+        { id: "A", text: "padding" },
+        { id: "B", text: "margin" },
+        { id: "C", text: "border-spacing" },
+        { id: "D", text: "line-height" },
+      ]),
+      correctOption: "B",
+      explanation: "margin tạo khoảng cách bên ngoài đường viền; padding tạo khoảng cách từ nội dung đến đường viền bên trong.",
+    },
+    {
+      part: 2,
+      sectionType: "COMMON",
+      topicTag: "Mạng & An toàn",
+      orderIndex: 5,
+      contentMarkdown: "Xét các phát biểu về giao thức truyền tải TCP, UDP và an toàn mạng:",
+      subQuestionsJson: JSON.stringify([
+        { id: "a", text: "Giao thức TCP thiết lập kết nối trước khi truyền và đảm bảo dữ liệu đến đích đầy đủ, đúng thứ tự.", isTrue: true, explanation: "Đúng. TCP là giao thức hướng kết nối và tin cậy." },
+        { id: "b", text: "UDP chậm hơn TCP nhưng đảm bảo không bao giờ mất gói tin khi phát video trực tiếp.", isTrue: false, explanation: "Sai. UDP nhanh hơn và độ trễ thấp hơn TCP nhưng không đảm bảo khôi phục gói tin bị mất." },
+        { id: "c", text: "Mạng riêng ảo (VPN) giúp mã hóa lưu lượng truyền tải khi sử dụng mạng công cộng.", isTrue: true, explanation: "Đúng. VPN tạo đường hầm mã hóa bảo vệ dữ liệu." },
+        { id: "d", text: "Tường lửa (Firewall) chỉ hoạt động bằng phần cứng chuyên dụng, không thể cài đặt dưới dạng phần mềm.", isTrue: false, explanation: "Sai. Tường lửa có cả dạng phần mềm (tích hợp trong hệ điều hành) và dạng phần cứng." },
+      ]),
+      explanation: "Kiểm tra kiến thức giao thức tầng Giao vận TCP/UDP và giải pháp bảo vệ mạng.",
+    },
+    {
+      part: 2,
+      sectionType: "CS",
+      topicTag: "Thuật toán & Python",
+      orderIndex: 6,
+      contentMarkdown: "Cho đoạn mã Python sắp xếp danh sách bằng thuật toán Sắp xếp nổi bọt (Bubble Sort):",
+      codeSnippet: `a = [6, 2, 8, 4]
+n = len(a)
+for i in range(n - 1):
+    for j in range(n - 1 - i):
+        if a[j] > a[j + 1]:
+            a[j], a[j + 1] = a[j + 1], a[j]`,
+      subQuestionsJson: JSON.stringify([
+        { id: "a", text: "Sau vòng lặp ngoài đầu tiên (i = 0), phần tử lớn nhất là `8` được đưa về cuối danh sách.", isTrue: true, explanation: "Đúng. Quá trình nổi bọt đẩy 8 về vị trí cuối cùng." },
+        { id: "b", text: "Độ phức tạp thời gian trường hợp xấu nhất của đoạn mã trên là O(n log n).", isTrue: false, explanation: "Sai. Hai vòng lặp lồng nhau cho độ phức tạp O(n²)." },
+        { id: "c", text: "Với n = 4, ở vòng lặp i = 0, vòng lặp bên trong thực hiện 3 lần so sánh.", isTrue: true, explanation: "Đúng. j chạy qua 0, 1, 2 (3 cặp kề nhau)." },
+        { id: "d", text: "Sau khi kết thúc toàn bộ thuật toán, danh sách `a` có thứ tự giảm dần `[8, 6, 4, 2]`.", isTrue: false, explanation: "Sai. Điều kiện `a[j] > a[j + 1]` sắp xếp tăng dần `[2, 4, 6, 8]`." },
+      ]),
+      explanation: "Kiểm tra khả năng mô phỏng từng bước và phân tích độ phức tạp thuật toán sắp xếp nổi bọt.",
+    },
+    {
+      part: 2,
+      sectionType: "ICT",
+      topicTag: "CSDL & SQL",
+      orderIndex: 7,
+      contentMarkdown: "Cho hai bảng `Lop(MaLop, TenLop, GVCN)` và `HocSinh(MaHS, HoTen, MaLop, DiemTB)` trong CSDL quản lý học sinh:",
+      codeSnippet: `SELECT L.TenLop, COUNT(H.MaHS) AS SiSo, AVG(H.DiemTB) AS DiemTrungBinh
+FROM Lop L
+INNER JOIN HocSinh H ON L.MaLop = H.MaLop
+GROUP BY L.TenLop
+HAVING AVG(H.DiemTB) >= 7.5
+ORDER BY DiemTrungBinh DESC;`,
+      subQuestionsJson: JSON.stringify([
+        { id: "a", text: "Cột `MaLop` trong bảng `HocSinh` đóng vai trò là khóa ngoại tham chiếu đến `Lop(MaLop)`.", isTrue: true, explanation: "Đúng. Đây là cột liên kết giữa bảng con HocSinh và bảng cha Lop." },
+        { id: "b", text: "Hàm `AVG(H.DiemTB)` dùng để tính tổng điểm trung bình của cả lớp.", isTrue: false, explanation: "Sai. AVG tính giá trị trung bình cộng, không phải tổng (SUM)." },
+        { id: "c", text: "Mệnh đề `HAVING AVG(H.DiemTB) >= 7.5` lọc ra những lớp có điểm trung bình từ 7.5 trở lên sau khi gom nhóm.", isTrue: true, explanation: "Đúng. HAVING dùng để lọc trên kết quả các nhóm sau GROUP BY." },
+        { id: "d", text: "Kết quả sẽ hiển thị lớp có điểm trung bình cao nhất ở dòng đầu tiên.", isTrue: true, explanation: "Đúng. ORDER BY DiemTrungBinh DESC sắp xếp giảm dần." },
+      ]),
+      explanation: "Kiểm tra truy vấn kết nối bảng INNER JOIN, hàm gộp AVG/COUNT và lọc nhóm HAVING.",
+    },
+  ];
+
+  for (const q of exam3Questions) {
+    await prisma.question.create({
+      data: {
+        examId: exam3.id,
         ...q,
       },
     });

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     const data = await request.json();
-    const { title, description, difficulty, durationMinutes, isPublished, questions } = data;
+    const { title, description, year, difficulty, durationMinutes, isPublished, questions } = data;
 
     if (!title || !Array.isArray(questions)) {
       return NextResponse.json({ error: "Dữ liệu JSON không đúng cấu trúc đề thi." }, { status: 400 });
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       data: {
         title,
         description: description || "Đề thi nhập từ JSON",
+        year: Number(year) || new Date().getFullYear(),
         difficulty: difficulty || "CHUAN_BO",
         durationMinutes: Number(durationMinutes) || 50,
         isPublished: isPublished ?? true,

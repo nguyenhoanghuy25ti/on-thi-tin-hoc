@@ -158,6 +158,7 @@ export default function AdminExamsPage() {
               <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold">
                 <tr>
                   <th className="px-6 py-4 text-left">Tên đề thi</th>
+                  <th className="px-6 py-4 text-center">Năm</th>
                   <th className="px-6 py-4 text-center">Mức độ</th>
                   <th className="px-6 py-4 text-center">Thời gian</th>
                   <th className="px-6 py-4 text-center">Số câu hỏi</th>
@@ -176,6 +177,9 @@ export default function AdminExamsPage() {
                       <div className="text-[11px] text-slate-400 line-clamp-1">
                         {exam.description}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-center font-mono text-xs font-bold text-slate-700 dark:text-slate-200">
+                      {exam.year || 2025}
                     </td>
                     <td className="px-6 py-4 text-center text-xs font-semibold">
                       {exam.difficulty === "CO_BAN"
@@ -267,12 +271,12 @@ export default function AdminExamsPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">
-                Dữ liệu JSON (Cấu trúc: title, description, difficulty, durationMinutes, questions)
+                Dữ liệu JSON (Cấu trúc: title, description, year, difficulty, durationMinutes, questions)
               </label>
               <textarea
                 value={importJsonText}
                 onChange={(e) => setImportJsonText(e.target.value)}
-                placeholder={'{\n  "title": "Đề thi thử số 02",\n  "durationMinutes": 50,\n  "questions": [...]\n}'}
+                placeholder={'{\n  "title": "Đề thi thử số 02",\n  "year": 2025,\n  "durationMinutes": 50,\n  "questions": [...]\n}'}
                 rows={10}
                 className="w-full p-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
