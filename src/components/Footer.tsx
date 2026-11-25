@@ -10,7 +10,8 @@ const LEARN_LINKS = [
 
 const SUPPORT_LINKS = [
   { href: "/qa", label: "Hỏi đáp" },
-  { href: "/contact", label: "Liên hệ" },
+  { href: "/contact", label: "Liên hệ & Báo lỗi" },
+  { href: "/exams", label: "Phòng thi thử" },
 ];
 
 export default function Footer() {
@@ -126,8 +127,8 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© 2026 IT Master THPT · Ôn thi Tốt nghiệp THPT Môn Tin học</p>
-          <p className="font-mono uppercase tracking-[0.16em]">GDPT 2018 · KHỐI 10 · 11 · 12</p>
+          <p>© 2026 IT Master THPT · Sản phẩm Bài thi HK1 - Môn Tin học</p>
+          <p className="font-mono uppercase tracking-[0.16em]">SGK KẾT NỐI TRI THỨC · KHỐI 10 · 11 · 12</p>
         </div>
       </div>
     </footer>

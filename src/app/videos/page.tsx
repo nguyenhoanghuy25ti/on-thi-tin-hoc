@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   ExternalLink,
   Play,
   Search,
   Video,
-  X,
   Youtube,
 } from "lucide-react";
 import GradeTabs from "@/components/GradeTabs";
@@ -22,121 +22,6 @@ import {
 } from "@/lib/videos";
 import { markVideoWatched, toggleVideoWatched, useProgress } from "@/lib/progress";
 
-function VideoModal({
-  lesson,
-  onClose,
-  onNext,
-  hasNext,
-  isWatched,
-  onToggleWatched,
-}: {
-  lesson: VideoLesson | null;
-  onClose: () => void;
-  onNext: () => void;
-  hasNext: boolean;
-  isWatched: boolean;
-  onToggleWatched: () => void;
-}) {
-  useEffect(() => {
-    if (!lesson) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [lesson, onClose]);
-
-  if (!lesson) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div className="relative z-10 w-full max-w-4xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
-        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-          <div className="min-w-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-0.5 font-mono text-[10px] font-bold text-accent-foreground">
-              {lesson.id} · Lớp {lesson.grade}
-            </span>
-            <h2 className="mt-1 truncate font-heading text-base font-bold text-foreground sm:text-lg">
-              {lesson.title}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng video"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="aspect-video w-full bg-black">
-          <iframe
-            key={lesson.id}
-            src={lesson.embedUrl}
-            title={`${lesson.title} · ${lesson.subtitle}`}
-            className="h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-background/60">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onToggleWatched}
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
-                isWatched
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "border-border bg-card text-foreground hover:border-primary/50"
-              }`}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {isWatched ? "Đã xem bài này" : "Đánh dấu đã xem"}
-            </button>
-
-            <a
-              href={lesson.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:text-primary"
-            >
-              <Youtube className="h-3.5 w-3.5 text-rose-500" />
-              YouTube
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-
-          {hasNext && (
-            <button
-              type="button"
-              onClick={onNext}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:brightness-105"
-            >
-              Bài tiếp theo
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function VideosContent() {
   const searchParams = useSearchParams();
   const gradeParam = searchParams.get("grade") || "10";
@@ -145,9 +30,20 @@ function VideosContent() {
 
   const [query, setQuery] = useState("");
   const [watchFilter, setWatchFilter] = useState<"all" | "unwatched" | "watched">("all");
-  const [selectedVideo, setSelectedVideo] = useState<VideoLesson | null>(null);
 
   const gradeVideos = getVideosByGrade(curriculum.grade);
+  const [selectedVideo, setSelectedVideo] = useState<VideoLesson | null>(
+    () => gradeVideos[0] || null
+  );
+  const playerRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync default video when switching grade tabs
+  useEffect(() => {
+    const list = getVideosByGrade(curriculum.grade);
+    setSelectedVideo(list[0] || null);
+    setQuery("");
+  }, [curriculum.grade]);
+
   const watchedInGrade = gradeVideos.filter((v) => isVideoWatched(v.id)).length;
   const gradePct = gradeVideos.length
     ? Math.round((watchedInGrade / gradeVideos.length) * 100)
@@ -164,15 +60,26 @@ function VideosContent() {
     return true;
   });
 
-  const openVideo = (video: VideoLesson) => {
+  const handleSelectVideo = (video: VideoLesson) => {
     markVideoWatched(video.id);
     setSelectedVideo(video);
+    playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const currentIndex = selectedVideo
     ? gradeVideos.findIndex((v) => v.id === selectedVideo.id)
     : -1;
+  const hasPrev = currentIndex > 0;
   const hasNext = currentIndex >= 0 && currentIndex < gradeVideos.length - 1;
+
+  const handlePrev = () => {
+    if (hasPrev) {
+      const prev = gradeVideos[currentIndex - 1];
+      markVideoWatched(prev.id);
+      setSelectedVideo(prev);
+    }
+  };
+
   const handleNext = () => {
     if (hasNext) {
       const next = gradeVideos[currentIndex + 1];
@@ -195,7 +102,7 @@ function VideosContent() {
               Video bài giảng SGK Kết nối tri thức
             </h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Xem trực tiếp bài giảng từng tiết học môn Tin học Lớp {curriculum.grade}, tự động lưu lại những video bạn đã hoàn thành.
+              Trình phát YouTube nhúng trực tiếp ngay trên trang cho từng bài học môn Tin học Lớp {curriculum.grade}. Chọn bài giảng bên dưới để phát và tự động lưu tiến độ.
             </p>
           </div>
 
@@ -256,23 +163,116 @@ function VideosContent() {
         </div>
       </div>
 
+      {/* Inline Responsive YouTube Player */}
+      {selectedVideo && (
+        <section
+          ref={playerRef}
+          className="scroll-mt-24 overflow-hidden rounded-3xl border border-border bg-card shadow-md"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-0.5 font-mono text-[10.5px] font-bold text-accent-foreground">
+                  {selectedVideo.id} · Lớp {selectedVideo.grade}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {selectedVideo.subtitle}
+                </span>
+              </div>
+              <h2 className="mt-1 font-heading text-base font-bold text-foreground sm:text-xl">
+                {selectedVideo.title}
+              </h2>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => toggleVideoWatched(selectedVideo.id)}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
+                  isVideoWatched(selectedVideo.id)
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "border-border bg-background text-foreground hover:border-primary/50"
+                }`}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {isVideoWatched(selectedVideo.id) ? "Đã xem bài này" : "Đánh dấu đã xem"}
+              </button>
+
+              <a
+                href={selectedVideo.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:text-primary"
+              >
+                <Youtube className="h-3.5 w-3.5 text-rose-500" />
+                Mở YouTube
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+
+          <div className="aspect-video w-full bg-black">
+            <iframe
+              key={selectedVideo.id}
+              src={selectedVideo.embedUrl}
+              title={`${selectedVideo.title} · ${selectedVideo.subtitle}`}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 bg-background/60 border-t border-border">
+            <button
+              type="button"
+              disabled={!hasPrev}
+              onClick={handlePrev}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground transition hover:border-primary/50 disabled:opacity-40"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Bài trước
+            </button>
+
+            <span className="font-mono text-xs text-muted-foreground">
+              Bài {currentIndex + 1} / {gradeVideos.length} · Lớp {curriculum.grade}
+            </span>
+
+            <button
+              type="button"
+              disabled={!hasNext}
+              onClick={handleNext}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition hover:brightness-105 disabled:opacity-40"
+            >
+              Bài tiếp theo
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Video Cards Grid with Real YouTube Thumbnails */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {filteredVideos.map((video) => {
           const watched = isVideoWatched(video.id);
+          const isCurrent = selectedVideo?.id === video.id;
           const thumbUrl = `https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg`;
 
           return (
             <div
               key={video.id}
               className={`group flex flex-col overflow-hidden rounded-2xl border bg-card transition duration-200 hover:-translate-y-1 hover:shadow-lg ${
-                watched ? "border-emerald-500/40" : "border-border hover:border-primary/50"
+                isCurrent
+                  ? "border-primary ring-2 ring-primary/20"
+                  : watched
+                  ? "border-emerald-500/40"
+                  : "border-border hover:border-primary/50"
               }`}
             >
               {/* Thumbnail */}
               <button
                 type="button"
-                onClick={() => openVideo(video)}
+                onClick={() => handleSelectVideo(video)}
                 className="relative aspect-video w-full overflow-hidden bg-slate-900 text-left"
               >
                 <img
@@ -287,11 +287,17 @@ function VideosContent() {
                   BÀI {String(video.number).padStart(2, "0")}
                 </span>
 
-                {watched && (
-                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg bg-emerald-600/90 px-2.5 py-1 text-[10.5px] font-bold text-white backdrop-blur-sm">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Đã xem
+                {isCurrent ? (
+                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1 text-[10.5px] font-bold text-white backdrop-blur-sm">
+                    Đang phát
                   </span>
+                ) : (
+                  watched && (
+                    <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-lg bg-emerald-600/90 px-2.5 py-1 text-[10.5px] font-bold text-white backdrop-blur-sm">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Đã xem
+                    </span>
+                  )
                 )}
 
                 <span className="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary/95 text-white shadow-xl transition group-hover:scale-110">
@@ -308,7 +314,7 @@ function VideosContent() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => openVideo(video)}
+                    onClick={() => handleSelectVideo(video)}
                     className="mt-1.5 text-left font-heading text-[15px] font-bold leading-snug text-foreground transition group-hover:text-primary line-clamp-2"
                   >
                     {video.title}
@@ -318,11 +324,11 @@ function VideosContent() {
                 <div className="flex items-center justify-between border-t border-border pt-3">
                   <button
                     type="button"
-                    onClick={() => openVideo(video)}
+                    onClick={() => handleSelectVideo(video)}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
                   >
                     <Play className="h-3.5 w-3.5" />
-                    Xem bài giảng
+                    {isCurrent ? "Đang chọn phát" : "Phát bài giảng"}
                   </button>
 
                   <button
@@ -348,17 +354,6 @@ function VideosContent() {
           Không tìm thấy video phù hợp với bộ lọc hiện tại.
         </div>
       )}
-
-      <VideoModal
-        lesson={selectedVideo}
-        onClose={() => setSelectedVideo(null)}
-        hasNext={hasNext}
-        onNext={handleNext}
-        isWatched={selectedVideo ? isVideoWatched(selectedVideo.id) : false}
-        onToggleWatched={() => {
-          if (selectedVideo) toggleVideoWatched(selectedVideo.id);
-        }}
-      />
     </div>
   );
 }
