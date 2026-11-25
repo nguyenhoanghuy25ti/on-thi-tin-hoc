@@ -26,7 +26,7 @@ export default function Footer() {
               </span>
               <div>
                 <span className="font-heading text-base font-extrabold tracking-tight text-foreground">
-                  ByteLab THPT
+                  IT Master THPT
                 </span>
                 <span className="block font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                   Tin học GDPT 2018
@@ -126,7 +126,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row">
-          <p>© 2026 ByteLab THPT · Ôn thi Tốt nghiệp THPT Môn Tin học</p>
+          <p>© 2026 IT Master THPT · Ôn thi Tốt nghiệp THPT Môn Tin học</p>
           <p className="font-mono uppercase tracking-[0.16em]">GDPT 2018 · KHỐI 10 · 11 · 12</p>
         </div>
       </div>

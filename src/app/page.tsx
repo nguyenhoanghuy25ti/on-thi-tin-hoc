@@ -337,12 +337,12 @@ export default function HomePage() {
         </div>
 
         <div className="lg:col-span-7 space-y-6">
-          <p className="eyebrow">Phương pháp ByteLab THPT</p>
+          <p className="eyebrow">Phương pháp IT Master THPT</p>
           <h2 className="font-heading text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             Học lý thuyết ngắn gọn — Kiểm chứng ngay bằng thực hành
           </h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Thay vì học thuộc lòng máy móc, ByteLab THPT kết hợp sơ đồ kiến thức trọng tâm, 89 video giảng dạy từng bài, câu hỏi giải thích chi tiết và môi trường chạy mã nguồn trực tiếp ngay trong trình duyệt.
+            Thay vì học thuộc lòng máy móc, IT Master THPT kết hợp sơ đồ kiến thức trọng tâm, 89 video giảng dạy từng bài, câu hỏi giải thích chi tiết và môi trường chạy mã nguồn trực tiếp ngay trong trình duyệt.
           </p>
 
           <div className="grid gap-3 sm:grid-cols-2">

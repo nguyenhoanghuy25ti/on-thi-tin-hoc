@@ -37,7 +37,7 @@ export default function Navbar() {
           </span>
           <span className="leading-none">
             <span className="block font-heading text-[15px] font-extrabold tracking-tight text-foreground">
-              ByteLab <span className="text-primary">THPT</span>
+              IT Master <span className="text-primary">THPT</span>
             </span>
             <span className="mt-0.5 block font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
               Tin học GDPT 2018

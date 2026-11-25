@@ -24,7 +24,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ByteLab THPT · Không gian Ôn thi Tin học Phổ thông 2018",
+  title: "IT Master THPT · Không gian Ôn thi Tin học Phổ thông 2018",
   description:
     "Nền tảng học lý thuyết trọng tâm, 89 video bài giảng, luyện đề 3 dạng thức, phòng thi thử 50 phút và thực hành code Python/SQL/HTML cho học sinh 10 – 11 – 12.",
 };
