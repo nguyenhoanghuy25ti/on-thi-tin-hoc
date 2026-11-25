@@ -1,0 +1,107 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                    String        @id @default(uuid())
+  name                  String
+  email                 String        @unique
+  passwordHash          String
+  role                  String        @default("STUDENT") // STUDENT | ADMIN
+  orientationPreference String?       @default("ICT")     // CS | ICT
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  attempts              ExamAttempt[]
+}
+
+model Topic {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String
+  orderIndex  Int      @default(0)
+  lessons     Lesson[]
+  createdAt   DateTime @default(now())
+}
+
+model Lesson {
+  id              String   @id @default(uuid())
+  topicId         String
+  topic           Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  title           String
+  slug            String   @unique
+  category        String   // e.g. "Lớp 10", "Lớp 11", "Lớp 12", "CS", "ICT"
+  contentMarkdown String
+  flashcardsJson  String   @default("[]") // [{ id, front, back, tag }]
+  orderIndex      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Exam {
+  id              String        @id @default(uuid())
+  title           String
+  description     String
+  difficulty      String        @default("CHUAN_BO") // CO_BAN | CHUAN_BO | NANG_CAO
+  durationMinutes Int           @default(50)
+  isPublished     Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  questions       Question[]
+  attempts        ExamAttempt[]
+}
+
+model Question {
+  id               String   @id @default(uuid())
+  examId           String
+  exam             Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  part             Int      // 1: Trắc nghiệm 4 lựa chọn, 2: Đúng/Sai
+  sectionType      String   @default("COMMON") // COMMON | CS | ICT
+  topicTag         String   @default("Chung")  // AI | Mang | DaoDuc | Web | CSDL | ThuatToan | Chung
+  contentMarkdown  String
+  codeSnippet      String?  // Optional code snippet (Python, SQL, HTML/CSS)
+  optionsJson      String?  // Part 1: JSON array of options [{ id: "A", text: "..." }]
+  correctOption    String?  // Part 1: "A" | "B" | "C" | "D"
+  subQuestionsJson String?  // Part 2: JSON array [{ id: "a", text: "...", isTrue: true, explanation: "..." }]
+  explanation      String   @default("")
+  orderIndex       Int      @default(0)
+  createdAt        DateTime @default(now())
+}
+
+model ExamAttempt {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  examId              String
+  exam                Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  selectedOrientation String   // CS | ICT
+  answersJson         String   // JSON string of user answers
+  part1Score          Float    @default(0)
+  part2Score          Float    @default(0)
+  totalScore          Float    @default(0)
+  timeSpentSeconds    Int      @default(0)
+  createdAt           DateTime @default(now())
+}
+
+model CommunityQuestion {
+  id        String   @id @default(uuid())
+  name      String
+  grade     String   @default("10")
+  topic     String   @default("")
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model ContactRequest {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  topic     String
+  message   String
+  createdAt DateTime @default(now())
+}
