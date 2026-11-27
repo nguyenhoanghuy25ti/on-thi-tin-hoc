@@ -1,71 +1,182 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import {
+  DEFAULT_PROFILE,
+  DEFAULT_PROGRESS_STATE,
+  PracticeRecord,
+  ProgressState,
+  StudentProfile,
+  normalizeProgressState,
+} from "./progress-shared";
 
-const STORAGE_KEY = "tinhoc-progress-v1";
+export type { PracticeRecord, StudentProfile, ProgressState };
 
-export interface PracticeRecord {
-  setId: string;
-  type: string;
-  title: string;
-  grade: number;
-  score: number;
-  total: number;
-  at: number;
+const GUEST_STORAGE_KEY = "tinhoc-progress-v1";
+const userStorageKey = (userId: string) => `tinhoc-progress-user-${userId}`;
+
+export type SyncStatus = "local" | "syncing" | "saved" | "error";
+
+let activeUserId: string | null = null;
+let syncStatus: SyncStatus = "local";
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function notifyProgressChange() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("tinhoc-progress"));
 }
 
-export interface StudentProfile {
-  studentName: string;
-  track: "CS" | "ICT";
-  targetScore: number;
-  focusGrade: number;
-}
-
-export interface ProgressState {
-  lessons: Record<string, boolean>;
-  videos: Record<string, boolean>;
-  practice: PracticeRecord[];
-  profile: StudentProfile;
-}
-
-const DEFAULT_PROFILE: StudentProfile = {
-  studentName: "Bạn học sinh",
-  track: "CS",
-  targetScore: 8.5,
-  focusGrade: 12,
-};
-
-const DEFAULT_STATE: ProgressState = {
-  lessons: {},
-  videos: {},
-  practice: [],
-  profile: DEFAULT_PROFILE,
-};
-
-export function readProgress(): ProgressState {
-  if (typeof window === "undefined") return DEFAULT_STATE;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_STATE;
-    const parsed = JSON.parse(raw);
-    return {
-      lessons: parsed && typeof parsed.lessons === "object" && parsed.lessons ? parsed.lessons : {},
-      videos: parsed && typeof parsed.videos === "object" && parsed.videos ? parsed.videos : {},
-      practice: parsed && Array.isArray(parsed.practice) ? parsed.practice : [],
-      profile:
-        parsed && typeof parsed.profile === "object" && parsed.profile
-          ? { ...DEFAULT_PROFILE, ...parsed.profile }
-          : DEFAULT_PROFILE,
-    };
-  } catch {
-    return DEFAULT_STATE;
+function setSyncStatus(next: SyncStatus) {
+  syncStatus = next;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("tinhoc-progress-sync"));
   }
 }
 
-function writeProgress(state: ProgressState) {
+function getActiveStorageKey(): string {
+  return activeUserId ? userStorageKey(activeUserId) : GUEST_STORAGE_KEY;
+}
+
+export function readGuestProgress(): ProgressState {
+  if (typeof window === "undefined") return DEFAULT_PROGRESS_STATE;
+  try {
+    const raw = window.localStorage.getItem(GUEST_STORAGE_KEY);
+    if (!raw) return DEFAULT_PROGRESS_STATE;
+    return normalizeProgressState(JSON.parse(raw));
+  } catch {
+    return DEFAULT_PROGRESS_STATE;
+  }
+}
+
+export function hasProgressData(state: ProgressState): boolean {
+  return (
+    Object.keys(state.lessons).length > 0 ||
+    Object.keys(state.videos).length > 0 ||
+    state.practice.length > 0
+  );
+}
+
+export function readProgress(): ProgressState {
+  if (typeof window === "undefined") return DEFAULT_PROGRESS_STATE;
+  try {
+    const raw = window.localStorage.getItem(getActiveStorageKey());
+    if (!raw) return DEFAULT_PROGRESS_STATE;
+    return normalizeProgressState(JSON.parse(raw));
+  } catch {
+    return DEFAULT_PROGRESS_STATE;
+  }
+}
+
+async function pushProgressToCloud(state: ProgressState) {
+  if (!activeUserId) {
+    setSyncStatus("local");
+    return;
+  }
+  setSyncStatus("syncing");
+  try {
+    const res = await fetch("/api/progress", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "replace", progress: state }),
+    });
+    if (!res.ok) {
+      setSyncStatus("error");
+      return;
+    }
+    setSyncStatus("saved");
+  } catch {
+    setSyncStatus("error");
+  }
+}
+
+function scheduleCloudSync(state: ProgressState) {
+  if (!activeUserId) {
+    setSyncStatus("local");
+    return;
+  }
+  setSyncStatus("syncing");
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    void pushProgressToCloud(state);
+  }, 350);
+}
+
+function writeProgress(state: ProgressState, options?: { skipCloudSync?: boolean }) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  window.dispatchEvent(new Event("tinhoc-progress"));
+  const normalized = normalizeProgressState(state);
+  window.localStorage.setItem(getActiveStorageKey(), JSON.stringify(normalized));
+  notifyProgressChange();
+  if (!options?.skipCloudSync) {
+    scheduleCloudSync(normalized);
+  }
+}
+
+export async function activateUserProgress(
+  user: { id: string; name: string; orientationPreference?: "CS" | "ICT" },
+  options?: { mergeGuest?: boolean }
+) {
+  if (typeof window === "undefined") return;
+  activeUserId = user.id;
+
+  const guestProgress = readGuestProgress();
+  const shouldMergeGuest = !!options?.mergeGuest && hasProgressData(guestProgress);
+
+  setSyncStatus("syncing");
+  try {
+    let cloudState: ProgressState | null = null;
+
+    if (shouldMergeGuest) {
+      const res = await fetch("/api/progress", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "merge", progress: guestProgress }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        cloudState = normalizeProgressState(data.progress, {
+          studentName: user.name,
+          track: user.orientationPreference === "CS" ? "CS" : "ICT",
+        });
+        window.localStorage.removeItem(GUEST_STORAGE_KEY);
+      }
+    } else {
+      const res = await fetch("/api/progress", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        cloudState = normalizeProgressState(data.progress, {
+          studentName: user.name,
+          track: user.orientationPreference === "CS" ? "CS" : "ICT",
+        });
+      }
+    }
+
+    if (cloudState) {
+      writeProgress(cloudState, { skipCloudSync: true });
+      setSyncStatus("saved");
+      return;
+    }
+
+    // Fallback to existing cached user progress if cloud unavailable
+    const existingLocal = readProgress();
+    const fallback = normalizeProgressState(existingLocal, {
+      studentName: user.name,
+      track: user.orientationPreference === "CS" ? "CS" : DEFAULT_PROFILE.track,
+    });
+    writeProgress(fallback, { skipCloudSync: true });
+    setSyncStatus("error");
+  } catch {
+    setSyncStatus("error");
+  }
+}
+
+export function deactivateUserProgress() {
+  if (syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = null;
+  }
+  activeUserId = null;
+  setSyncStatus("local");
+  notifyProgressChange();
 }
 
 export function toggleLessonDone(lessonId: string): ProgressState {
@@ -123,15 +234,20 @@ export function recordPracticeResult(record: PracticeRecord): ProgressState {
 }
 
 export function useProgress() {
-  const [state, setState] = useState<ProgressState>(DEFAULT_STATE);
+  const [state, setState] = useState<ProgressState>(DEFAULT_PROGRESS_STATE);
+  const [status, setStatus] = useState<SyncStatus>(syncStatus);
 
   useEffect(() => {
     setState(readProgress());
+    setStatus(syncStatus);
     const sync = () => setState(readProgress());
+    const onSyncStatus = () => setStatus(syncStatus);
     window.addEventListener("tinhoc-progress", sync);
+    window.addEventListener("tinhoc-progress-sync", onSyncStatus);
     window.addEventListener("storage", sync);
     return () => {
       window.removeEventListener("tinhoc-progress", sync);
+      window.removeEventListener("tinhoc-progress-sync", onSyncStatus);
       window.removeEventListener("storage", sync);
     };
   }, []);
@@ -156,5 +272,6 @@ export function useProgress() {
     doneCount,
     watchedVideosCount,
     averageScore,
+    syncStatus: status,
   };
 }

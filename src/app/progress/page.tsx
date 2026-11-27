@@ -9,16 +9,22 @@ import {
   BookOpen,
   Brain,
   CheckCircle2,
+  Cloud,
+  CloudOff,
   Database,
   FileCheck2,
+  Loader2,
+  LogIn,
   Sparkles,
   Target,
   TrendingUp,
+  UserPlus,
   Video,
 } from "lucide-react";
 import { ALL_LESSONS, CURRICULUM, TOTAL_LESSONS_COUNT } from "@/lib/curriculum";
 import { TOTAL_VIDEOS_COUNT, getVideosByGrade } from "@/lib/videos";
 import { updateStudentProfile, useProgress } from "@/lib/progress";
+import { useAuth } from "@/components/AuthProvider";
 import {
   LESSON_PRACTICE_SETS,
   PracticeQuestionType,
@@ -48,6 +54,7 @@ const FORMAT_COLORS: Record<
 };
 
 export default function ProgressPage() {
+  const { user, loading: authLoading } = useAuth();
   const {
     lessons,
     videos,
@@ -56,6 +63,7 @@ export default function ProgressPage() {
     doneCount,
     watchedVideosCount,
     averageScore,
+    syncStatus,
   } = useProgress();
 
   const [nameInput, setNameInput] = useState(profile.studentName);
@@ -202,6 +210,83 @@ export default function ProgressPage() {
 
   return (
     <div className="container-page py-10 lg:py-12 space-y-10">
+      {/* Account & Cloud Sync Status Banner */}
+      {!authLoading && (
+        <div
+          className={`flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
+            user
+              ? "border-emerald-500/30 bg-emerald-500/[0.06]"
+              : "border-border bg-card"
+          }`}
+        >
+          {user ? (
+            <>
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  {syncStatus === "syncing" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : syncStatus === "error" ? (
+                    <CloudOff className="h-4 w-4 text-amber-500" />
+                  ) : (
+                    <Cloud className="h-4 w-4" />
+                  )}
+                </span>
+                <div>
+                  <p className="text-xs font-bold text-foreground">
+                    Đã đăng nhập: {user.name} ({user.email})
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {syncStatus === "syncing"
+                      ? "Đang đồng bộ tiến trình lên tài khoản..."
+                      : syncStatus === "error"
+                      ? "Đang lưu tạm trên trình duyệt (chưa kết nối được máy chủ đồng bộ)."
+                      : "Tiến trình học tập đang được đồng bộ an toàn theo tài khoản của bạn."}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 self-start rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-semibold text-foreground transition hover:border-primary/50 hover:text-primary sm:self-auto"
+              >
+                Lịch sử thi thử & Phân tích →
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+                  <CloudOff className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-xs font-bold text-foreground">
+                    Chế độ khách · Tiến trình chỉ lưu trên trình duyệt này
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tạo tài khoản miễn phí để đồng bộ tiến trình và học tiếp trên mọi thiết bị.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:border-primary/50"
+                >
+                  <LogIn className="h-3.5 w-3.5" />
+                  Đăng nhập
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-105"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  Tạo tài khoản
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Personalized Goal Setup Header */}
       <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">

@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
+  Cloud,
   Code2,
   Cpu,
   Database,
@@ -13,7 +14,10 @@ import {
   PlayCircle,
   Sparkles,
   Terminal,
+  UserPlus,
 } from "lucide-react";
+import { useAuth } from "@/components/AuthProvider";
+import HomeAccountSection from "@/components/HomeAccountSection";
 import { useProgress } from "@/lib/progress";
 import { CURRICULUM, TOTAL_LESSONS_COUNT } from "@/lib/curriculum";
 import { QUESTION_TYPES, TOTAL_QUESTIONS_COUNT } from "@/lib/questions";
@@ -47,6 +51,7 @@ const FORMAT_CARDS = [
 ];
 
 export default function HomePage() {
+  const { user, loading: authLoading } = useAuth();
   const { lessons, doneCount, practice, averageScore } = useProgress();
   const percent = TOTAL_LESSONS_COUNT
     ? Math.round((doneCount / TOTAL_LESSONS_COUNT) * 100)
@@ -95,6 +100,24 @@ export default function HomePage() {
                 <Code2 className="h-4 w-4" />
                 Mở Code Lab →
               </Link>
+              {!authLoading &&
+                (user ? (
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline transition-colors"
+                  >
+                    <Cloud className="h-4 w-4" />
+                    Hồ sơ: {user.name} →
+                  </Link>
+                ) : (
+                  <a
+                    href="#tai-khoan"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-primary hover:underline transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Tạo tài khoản miễn phí →
+                  </a>
+                ))}
             </div>
           </div>
 
@@ -122,9 +145,35 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                <span>Lượt luyện: <strong className="text-foreground">{practice.length}</strong></span>
-                <span>TB: <strong className="text-foreground">{averageScore}%</strong></span>
+              <div className="space-y-2.5 pt-1 border-t border-border">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Lượt luyện: <strong className="text-foreground">{practice.length}</strong></span>
+                  <span>TB: <strong className="text-foreground">{averageScore}%</strong></span>
+                </div>
+                {!authLoading &&
+                  (user ? (
+                    <Link
+                      href="/progress"
+                      className="flex items-center justify-between rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 transition hover:bg-emerald-500/15"
+                    >
+                      <span className="inline-flex items-center gap-1.5 truncate">
+                        <Cloud className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{user.name} · Đã đồng bộ</span>
+                      </span>
+                      <ArrowRight className="h-3 w-3 shrink-0" />
+                    </Link>
+                  ) : (
+                    <a
+                      href="#tai-khoan"
+                      className="flex items-center justify-between rounded-xl border border-primary/25 bg-accent/50 px-3 py-1.5 text-[11px] font-semibold text-accent-foreground transition hover:border-primary/50 hover:bg-accent"
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <UserPlus className="h-3.5 w-3.5 text-primary" />
+                        Tạo tài khoản lưu tiến độ
+                      </span>
+                      <ArrowRight className="h-3 w-3 text-primary" />
+                    </a>
+                  ))}
               </div>
             </div>
 
@@ -190,7 +239,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. Grade Roadmap: Timeline Stepper Cards */}
+      {/* 2. Inline Account Creation & Sync Studio */}
+      <HomeAccountSection />
+
+      {/* 3. Grade Roadmap: Timeline Stepper Cards */}
       <section className="container-page">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-10">
           <div>
