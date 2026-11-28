@@ -74,10 +74,10 @@ function TheoryContent() {
           <div className="space-y-3 max-w-3xl">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 font-mono text-[11px] font-bold text-accent-foreground">
               <BookOpen className="h-3.5 w-3.5 shrink-0" />
-              Nội dung tóm tắt bám sát SGK Tin học 10, 11, 12 — Bộ Kết nối tri thức với cuộc sống (SGK dùng chung)
+              Bài giảng chi tiết bám sát SGK Tin học 10, 11, 12 — Bộ Kết nối tri thức với cuộc sống
             </span>
             <h1 className="font-heading text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-              Tóm tắt Kiến thức Tin học Lớp {curriculum.grade}
+              Kiến thức trọng tâm & Bài giảng Lớp {curriculum.grade}
             </h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
               {curriculum.intro}
@@ -289,7 +289,7 @@ function TheoryContent() {
                             href={`/theory/${lesson.id}`}
                             className="inline-flex items-center gap-1 font-bold text-primary hover:underline"
                           >
-                            Xem tóm tắt trọng tâm
+                            Học bài chi tiết
                             <ArrowRight className="h-3.5 w-3.5" />
                           </Link>
                           <div className="flex items-center gap-3">
